@@ -15,10 +15,10 @@ A c++ manager that abstracts the connection to a simulator that follows the [SSL
 
     This will set the callback for receiving feedback to a configuration command.
 
-According to the [SSL simulation protocol](https://github.com/RoboCup-SSL/ssl-simulation-protocol), bidirectional UDP connections should be used. GrSim, however, does not implement this (as of Oct 2021), so the feedback is sent on a different port than on which the robot control messages should be sent.
+According to the [SSL simulation protocol](https://github.com/RoboCup-SSL/ssl-simulation-protocol), bidirectional UDP connections should be used. [GrSim](https://github.com/RoboCup-SSL/grSim), however, does not implement this (as of Oct 2021), so the feedback is sent on a different port than on which the robot control messages should be sent. Be sure to set the feedback ports accordingly instead of using the default ports if you use that simulator.
 
 ## Requirements
-* Protobuf > 3.9.1
+* Protobuf >= 3.9.1
 * QtNetworking
 
 ## TODOs
