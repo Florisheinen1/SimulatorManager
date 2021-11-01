@@ -1,2 +1,2 @@
-add_library(simManager "SimulationManager.cpp")
-target_link_libraries(simManager simManagerIncludes simManagerProto Qt5::Network)
+add_library(simManager "SimulatorManager.cpp")
+target_link_libraries(simManager simManagerIncludes simManagerProto Qt5::Network Qt5::Widgets)

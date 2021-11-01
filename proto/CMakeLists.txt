@@ -5,6 +5,7 @@ protobuf_generate_cpp(SIM_PROTO_SRCS SIM_PROTO_HDRS
 "${CMAKE_CURRENT_LIST_DIR}/proto/ssl_gc_common.proto"
 "${CMAKE_CURRENT_LIST_DIR}/proto/ssl_simulation_config.proto"
 "${CMAKE_CURRENT_LIST_DIR}/proto/ssl_simulation_error.proto"
+"${CMAKE_CURRENT_LIST_DIR}/proto/ssl_simulation_robot_feedback.proto"
 "${CMAKE_CURRENT_LIST_DIR}/proto/ssl_vision_geometry.proto")
 
 # Create the target that contains the necessary proto files

@@ -2,19 +2,11 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include "SimulationManager.hpp"
+#include "SimulatorManager.hpp"
 
-// TODO: Debug property -> change in local speed direction
+// TODO: Debug: change property -> change in local speed direction
 
 namespace rtt::robothub::simulation {
-    ConfigurationCommand createConfigurationCommand1() {
-        ConfigurationCommand command;
-        command.setBallLocation(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, true, true, true);
-
-        RobotProperties rps { .radius = 0.2f };
-        //command.addRobotSpecs(3, false, rps);
-        return command;
-    }
     ConfigurationCommand createFormationCommand() {
         ConfigurationCommand command;
 
@@ -27,7 +19,7 @@ namespace rtt::robothub::simulation {
         return command;
     }
 
-    ConfigurationCommand createWeirdConfig() {
+    ConfigurationCommand createWeirdConfigCommand() {
         ConfigurationCommand command;
 
         //command.addRobotLocation(3, true, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, true, false);
@@ -35,37 +27,68 @@ namespace rtt::robothub::simulation {
         command.addRobotSpecs(3, true, property);
         return command;
     }
-
-    RobotControlCommand createControlCommand() {
-        RobotControlCommand command;
-        command.addRobotControlWithLocalSpeeds(9, 0.0f, 0.0f, 0.0f, 3.0f, 0.0f, 0.0f);
-        return command;
-    }
-
 }
+
+void onControlFeedback(rtt::robothub::simulation::RobotControlFeedback& feedback) {
+    //std::cout << "Received feedback in example!" << std::endl;
+    std::cout << "---> Feedback for team: " << (feedback.isTeamYellow ? "yellow" : "blue") << ", errors: " << feedback.simulationErrors.size() << std::endl;
+}
+void onConfigurationFeedback(rtt::robothub::simulation::ConfigurationFeedback& feedback) {
+    std::cout << "---> Configuration feedback with: " << feedback.simulationErrors.size() << " errors!" << std::endl;
+}
+
 int main() {
-    
-    //Sim::CommandSender generalCommander("127.0.0.1", 20011);
-    rtt::robothub::simulation::SimulationManager simManager("127.0.0.1", 10301, 10302, 10300);
-    //Sim::CommandSender yellowCommander("127.0.0.1", 10302);
-    //Sim::CommandSender simCommander("127.0.0.1", 10300);
-    
-    //Sim::ConfigurationCommand weirdCommand = createWeirdConfig();
-    //simCommander.sendConfigurationCommand(weirdCommand);
+    using namespace rtt::robothub::simulation;
 
-    std::cout << "Sending command... ";
-    rtt::robothub::simulation::RobotControlCommand command = rtt::robothub::simulation::createControlCommand();
-    rtt::robothub::simulation::ConfigurationCommand config = rtt::robothub::simulation::createConfigurationCommand1();
+    {
+        // GrSim does not allow a bidirectional udp connection, so it uses different ports for the feedback
+        SimulatorNetworkConfiguration config = { .blueFeedbackPort = 30011,
+                                                 .yellowFeedbackPort = 30012,
+                                                 .configurationFeedbackPort = 30013 };
+        
+        std::unique_ptr<SimulatorManager> manager;
 
-    simManager.sendConfigurationCommand(config);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    simManager.sendRobotControlCommand(command, false);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    simManager.sendRobotControlCommand(command, true);
+        try {
+            manager = std::make_unique<SimulatorManager>(config);
+        } catch (FailedToBindPortException e) {
+            std::cout << "Error: " << e.what() << std::endl;
+            return -1;
+        }
 
-    std::cout << "Sent." << std::endl;
-    //Sim::CommandSender feedbackSender("127.0.0.1", 30011);
-    //feedbackSender.sendRobotControlCommand(command);
+        std::cout << "Setting callback... ";
+        manager->setRobotControlFeedbackCallback(onControlFeedback);
+        manager->setConfigurationFeedbackCallback(onConfigurationFeedback);
+        std::cout << "Done!" << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        std::cout << "Sending robot command to blue... ";
+        RobotControlCommand command;
+        command.addRobotControlWithLocalSpeeds(9, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+        manager->sendRobotControlCommand(command, false);
+        std::cout << "Done!" << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        std::cout << "Sending robot command to yellow... ";
+        RobotControlCommand command2;
+        command2.addRobotControlWithLocalSpeeds(0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        command2.addRobotControlWithLocalSpeeds(2, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        manager->sendRobotControlCommand(command2, true);
+        std::cout << "Done!" << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        std::cout << "Sending configuration command... ";
+        ConfigurationCommand command3;
+        command3.setSimulationSpeed(10);
+        manager->sendConfigurationCommand(command3);
+        std::cout << "Done!" << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        
+    }
+    std::cout << "Closed!" << std::endl;
 
     return 0;
 }
