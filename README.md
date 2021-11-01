@@ -1,4 +1,4 @@
-# SimulationManager
+# SimulatorManager
 By: Floris Heinen, October 2021
 
 A c++ manager that abstracts the connection to a simulator that follows the [SSL simulation protocol](https://github.com/RoboCup-SSL/ssl-simulation-protocol). This manager handles all the underlying logic and networking necessary to connect to the simulator, resulting in only 4 functions:
