@@ -11,7 +11,6 @@ include(CPack)
 # Find required packages
 find_package(Protobuf 3.9.1 REQUIRED)
 find_package(Qt5 COMPONENTS Network REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 # Compile all proto files and create grSimCommanderProto target
 add_subdirectory(proto)
